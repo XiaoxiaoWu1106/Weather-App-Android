@@ -17,23 +17,34 @@ import androidx.recyclerview.widget.RecyclerView;
 public class WeatherListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     private final List<WeatherItem> weatherList;
+    private TextView placeHolder;
+    private OnClickListener mOnClickListener;
 
-    public WeatherListAdapter (List<WeatherItem> list){
+    public WeatherListAdapter (List<WeatherItem> list, @NonNull OnClickListener listener){
         weatherList = list;
+        mOnClickListener = listener;
+        registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
+            @Override
+            public void onChanged() {
+                super.onChanged();
+                boolean shouldShow = weatherList == null || weatherList.size() == 0;
+                WeatherListAdapter.this.placeHolder.setVisibility(shouldShow ? View.VISIBLE : View.GONE);
+            }
+        });
     }
 
     @NonNull
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_weather_row, parent,false);
-        return new WeatherViewHolder(view);
+        return new WeatherViewHolder(view, mOnClickListener);
     }
 
     @Override
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
         WeatherViewHolder vHo = (WeatherViewHolder) holder;
         WeatherItem item = weatherList.get(position);
-        vHo.city.setText(item.getCity());
+        vHo.city.setText(item.getCity().getName());
         vHo.temp.setText(item.getTemp()+" °C");
         Picasso.get()
                 .load(item.getIconUrl())
@@ -51,13 +62,27 @@ public class WeatherListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         TextView temp;
         ImageView icon;
 
-        WeatherViewHolder(@NonNull View itemView) {
-
+        WeatherViewHolder(@NonNull View itemView,OnClickListener listener) {
             super(itemView);
+            itemView.setOnClickListener((view) -> listener.onClick(getAdapterPosition()));
+            itemView.setOnLongClickListener((view) -> {
+                listener.onLongClick(getAdapterPosition());
+                return true;
+            });
             city = itemView.findViewById(R.id.city_name);
             temp = itemView.findViewById(R.id.city_temp);
             icon = itemView.findViewById(R.id.weather_icon);
 
         }
+    }
+
+    public void setEmptyView(TextView placeHolder){
+        this.placeHolder = placeHolder;
+    }
+
+
+    public interface OnClickListener {
+        void onClick(int position);
+        void onLongClick(int position);
     }
 }

@@ -7,7 +7,8 @@ import androidx.annotation.Nullable;
 
 public class WeatherItem {
 
-    private String city;
+
+    private City city;
     private double temp;
     private double minTemp;
     private double maxTemp;
@@ -22,7 +23,12 @@ public class WeatherItem {
         try {
             JSONObject jsonObject = json.getJSONObject("main");
             WeatherItem item = new WeatherItem();
-            item.city = json.getString("name");
+            int cityId = json.getInt("id");
+            String cityName = json.getString("name");
+            String cityCountry = json.getJSONObject("sys").getString("country");
+            double lat = json.getJSONObject("coord").getDouble("lat");
+            double lon = json.getJSONObject("coord").getDouble("lon");
+            item.city = new City(cityId,cityName,cityCountry,lat,lon);
             item.temp = jsonObject.getDouble("temp");
             item.minTemp = jsonObject.getDouble("temp_min");
             item.maxTemp = jsonObject.getDouble("temp_max");
@@ -36,7 +42,7 @@ public class WeatherItem {
 
     }
 
-    public String getCity() {
+    public City getCity() {
         return city;
     }
 
