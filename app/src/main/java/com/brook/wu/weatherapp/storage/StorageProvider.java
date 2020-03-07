@@ -5,7 +5,7 @@ public class StorageProvider {
     public static IStorageProvider getStorageProvider() {
         //Object o return either SharedPreference or SQLite storage provider depends on class name
         //this should never be null
-        String className = "com.brook.wu.weatherapp.storage.SharedPreferenceStorageProvider";
+        String className = "com.brook.wu.weatherapp.storage.SQLiteStorageProvider";
         try {
             Object o = Class.forName(className).newInstance();
             return (IStorageProvider) o;

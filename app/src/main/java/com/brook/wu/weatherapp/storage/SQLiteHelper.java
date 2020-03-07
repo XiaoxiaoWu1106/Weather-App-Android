@@ -33,6 +33,11 @@ public class SQLiteHelper extends SQLiteOpenHelper {
     private static final String COLUMN_LON = "lon";
     private static SQLiteHelper instance;
 
+    static final String ALL_CITIES_QUERY = "select * from cities where name like ? AND LENGTH(name) > 0 order by name";
+    static final String STORED_CITIES_QUERY = "select * from weather order by name";
+    static final String TABLE_NAME_CITIES = "cities";
+    static final String TABLE_NAME_WEATHER = "weather";
+
     static SQLiteHelper getInstance() {
         if (instance == null) {
             instance = new SQLiteHelper(MyApplication.getInstance());
@@ -48,27 +53,30 @@ public class SQLiteHelper extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db) {
         Log.d("DBLoading", "Load database start on create start");
+        db.execSQL(
+                "create table weather " +
+                        "(id integer primary key, name text,country text,lat numeric, lon numeric)"
+        );
         //create table
         db.execSQL(
                 "create table cities " +
                         "(id integer primary key, name text,country text,lat numeric, lon numeric)"
         );
+
         //create index for column "name", this will speed up query by column
         db.execSQL("CREATE INDEX city_by_name " +
                 "ON cities(name);");
 
-        db.execSQL(
-                "create table weather " +
-                        "(cityId integer primary key, name text)"
-        );
-        //create index for column "name", this will speed up query by column
-        db.execSQL("CREATE INDEX city_by_name " +
+        db.execSQL("CREATE INDEX weather_by_city_name " +
                 "ON weather(name);");
-        try {
-            fillDatabase(db);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
+
+        new Thread(()-> {
+            try {
+                fillDatabase(db);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }).start();
         Log.d("DBLoading", "Load database start on create finish");
     }
 
@@ -86,7 +94,7 @@ public class SQLiteHelper extends SQLiteOpenHelper {
             double cityLat = coord.getDouble(COLUMN_LAT);
             double cityLon = coord.getDouble(COLUMN_LON);
             Log.v("DBLoading", "inserting city");
-            insertCityImpl(new City(cityId, cityName, cityCountry, cityLat, cityLon), db);
+            insertCityImpl(TABLE_NAME_CITIES, new City(cityId, cityName, cityCountry, cityLat, cityLon), db);
         }
 
     }
@@ -97,20 +105,22 @@ public class SQLiteHelper extends SQLiteOpenHelper {
     }
 
 
-    private void insertCityImpl(City city, SQLiteDatabase db) {
+    private void insertCityImpl(String tableName, City city, SQLiteDatabase db) {
         ContentValues contentValues = new ContentValues();
         contentValues.put(COLUMN_ID, city.getId());
         contentValues.put(COLUMN_NAME, city.getName());
         contentValues.put(COLUMN_COUNTRY, city.getCountry());
         contentValues.put(COLUMN_LAT, city.getLat());
         contentValues.put(COLUMN_LON, city.getLon());
-        db.insert("cities", null, contentValues);
+        db.insert(tableName, null, contentValues);
     }
 
-    public List<City> getCities(String nameFilter) {
+
+    List<City> getCities(String queryString, String queryFilter) {
         SQLiteDatabase db = this.getReadableDatabase();
         List<City> cities;
-        try (Cursor res = db.rawQuery("select * from cities where name like ? AND LENGTH(name) > 0 order by name", new String[]{nameFilter + "%"})) {
+        String[] strings = queryFilter == null || queryFilter.isEmpty() ? null : new String[]{queryFilter + "%"};
+        try (Cursor res = db.rawQuery(queryString, strings)) {
             res.moveToFirst();
             cities = new ArrayList<>();
             while (!res.isAfterLast()) {
@@ -126,12 +136,13 @@ public class SQLiteHelper extends SQLiteOpenHelper {
         return cities;
     }
 
-    void insertCity(City city) {
+    void insertCity(String tableName, City city) {
         SQLiteDatabase db = getWritableDatabase();
-        insertCityImpl(city, db);
+        insertCityImpl(tableName, city, db);
     }
 
-    public void deleteCity(City cityName) {
-
+    void deleteCity(String tableName, City cityName) {
+        SQLiteDatabase db = getWritableDatabase();
+        db.delete(tableName,"name like ?",new String[]{cityName.getName()});
     }
 }
