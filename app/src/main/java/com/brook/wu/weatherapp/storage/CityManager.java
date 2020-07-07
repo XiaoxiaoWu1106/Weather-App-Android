@@ -3,6 +3,7 @@ package com.brook.wu.weatherapp.storage;
 import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 
 import com.brook.wu.weatherapp.MyApplication;
 import com.brook.wu.weatherapp.model.City;
@@ -57,8 +58,11 @@ public class CityManager {
     }
 
     public void saveCity(City city, DataCallback<Void> data) {
+        Log.d("TESTINGTAG","Saving a cityThreadStart!");
         new Thread(() -> {
+            Log.d("TESTINGTAG","Saving a city!");
             mCityDao.saveCity(city);
+            Log.d("TESTINGTAG","Save ready, calling callback....!");
             mainHandler.post(() -> data.completed(null));
         }).start();
     }
