@@ -6,7 +6,7 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.brook.wu.weatherapp.model.WeatherItem;
+import com.brook.wu.weatherapp.utils.WeatherItem;
 import com.squareup.picasso.Picasso;
 
 import java.util.List;

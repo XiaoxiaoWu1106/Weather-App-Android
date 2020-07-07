@@ -4,10 +4,8 @@ import android.database.Cursor;
 import android.database.MatrixCursor;
 
 import com.brook.wu.weatherapp.model.City;
-import com.brook.wu.weatherapp.model.WeatherItem;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 

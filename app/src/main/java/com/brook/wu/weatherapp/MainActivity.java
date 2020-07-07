@@ -6,7 +6,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
-import android.database.MatrixCursor;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -16,10 +15,9 @@ import android.widget.TextView;
 
 import com.brook.wu.weatherapp.backend.NetworkProvider;
 import com.brook.wu.weatherapp.model.City;
-import com.brook.wu.weatherapp.model.WeatherItem;
-import com.brook.wu.weatherapp.storage.IStorageProvider;
-import com.brook.wu.weatherapp.storage.StorageProvider;
+import com.brook.wu.weatherapp.storage.CityManager;
 import com.brook.wu.weatherapp.utils.SearchAdapter;
+import com.brook.wu.weatherapp.utils.WeatherItem;
 import com.brook.wu.weatherapp.utils.WeatherUtils;
 import com.google.android.material.snackbar.Snackbar;
 
@@ -38,7 +36,6 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
 
 
     private final List<WeatherItem> mDataSet = new ArrayList<>();
-    private final IStorageProvider mStorageProvider = StorageProvider.getStorageProvider();
     private WeatherListAdapter mAdapter;
     private TextView mPlaceholder;
     private SwipeRefreshLayout mSwipeRefreshLayout;
@@ -71,24 +68,27 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
 
     private void loadData() {
         invalidatePlaceholder();
-        List<City> storedCities = mStorageProvider.getStoredCities();
-        for (City city : storedCities) {
-            loadCity(city.getName());
-        }
-        if (storedCities.size() == 0) {
-            mSwipeRefreshLayout.setRefreshing(false);
-        }
+        CityManager.getInstance().getUserSavedCities((storedCities) -> {
+            for (City city : storedCities) {
+                loadCity(city.getName());
+            }
+            if (storedCities.size() == 0) {
+                mSwipeRefreshLayout.setRefreshing(false);
+            }
+        });
     }
 
     private void invalidatePlaceholder() {
-        List<City> storedCities = mStorageProvider.getStoredCities();
-        if (storedCities.size() == 0) {
-            mPlaceholder.setText("No cities added. Press + to add one");
-        }
+        CityManager.getInstance().getUserSavedCities((storedCities) -> {
+            if (storedCities.size() == 0) {
+                mPlaceholder.setText("No cities added. Press + to add one");
+            }
+        });
     }
 
 
     final List<String> cityQueries = new ArrayList<>();
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -106,10 +106,10 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
 
             @Override
             public boolean onSuggestionClick(int position) {
-                Cursor cursor= search.getSuggestionsAdapter().getCursor();
+                Cursor cursor = search.getSuggestionsAdapter().getCursor();
                 cursor.moveToPosition(position);
-                String suggestion =cursor.getString(1);//2 is the index of col containing suggestion name.
-                search.setQuery(suggestion,true);//setting suggestion
+                String suggestion = cursor.getString(1);//2 is the index of col containing suggestion name.
+                search.setQuery(suggestion, true);//setting suggestion
                 return true;
             }
         });
@@ -124,13 +124,14 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
             @Override
             public boolean onQueryTextChange(String newText) {
                 //query the cities matching user's input
-                cityQueries.clear();
-                List<String> worldCitiesFiltered = WeatherUtils.mapCitiesToCityNames(mStorageProvider.getWorldCities(newText));
-                WeatherUtils.removeDuplicates(mDataSet,worldCitiesFiltered);
-                cityQueries.addAll(worldCitiesFiltered);
-                Cursor cursor = WeatherUtils.getCursor(cityQueries);
-                search.setSuggestionsAdapter(new SearchAdapter(MainActivity.this, cursor, cityQueries));
-
+                CityManager.getInstance().getWorldCities(newText, (cities) -> {
+                    cityQueries.clear();
+                    List<String> worldCitiesFiltered = WeatherUtils.mapCitiesToCityNames(cities);
+                    WeatherUtils.removeDuplicates(mDataSet, worldCitiesFiltered);
+                    cityQueries.addAll(worldCitiesFiltered);
+                    Cursor cursor = WeatherUtils.getCursor(cityQueries);
+                    search.setSuggestionsAdapter(new SearchAdapter(MainActivity.this, cursor, cityQueries));
+                });
                 return false;
             }
 
@@ -144,7 +145,7 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
             return;
         }
 
-        if(!WeatherUtils.containsCity(mDataSet, query)) {
+        if (!WeatherUtils.containsCity(mDataSet, query)) {
             loadCity(query, true);
         } else {
             Snackbar.make(mSwipeRefreshLayout, R.string.error_city_exist, Snackbar.LENGTH_LONG).show();
@@ -201,16 +202,12 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
                     public void onClick(DialogInterface dialog, int which) {
                         WeatherItem weatherItem = mDataSet.remove(position);
                         mAdapter.notifyDataSetChanged();
-                        mStorageProvider.deleteCity(weatherItem.getCity());
-                        invalidatePlaceholder();
+                        CityManager.getInstance().deleteCity(weatherItem.getCity().getId(),
+                                (completed) -> invalidatePlaceholder());
                     }
                 }).setNegativeButton("Cancel", null)
                 .show();
     }
-
-
-
-
 
 
 //TODO:refactor the following functions to own class
@@ -218,14 +215,21 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
 
     private void loadCity(String cityName, boolean save) {
         NetworkProvider.getWeather(cityName, new NetworkProvider.Callback() {
+            private void adapterSync(WeatherItem item) {
+                mSwipeRefreshLayout.setRefreshing(false);
+                mDataSet.add(item);
+                mAdapter.notifyDataSetChanged();
+            }
+
             @Override
             public void onComplete(WeatherItem item) {
                 Log.d("Pass", item.toString());
                 //reset layout
-                if (save) mStorageProvider.saveCity(item.getCity());
-                mSwipeRefreshLayout.setRefreshing(false);
-                mDataSet.add(item);
-                mAdapter.notifyDataSetChanged();
+                if (save) {
+                    CityManager.getInstance().saveCity(item.getCity(), (complted) -> adapterSync(item));
+                    return;
+                }
+                adapterSync(item);
             }
 
             @Override

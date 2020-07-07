@@ -4,19 +4,20 @@ import android.app.Application;
 import android.content.SharedPreferences;
 
 import com.androidnetworking.AndroidNetworking;
-import com.brook.wu.weatherapp.storage.SQLiteHelper;
-import com.brook.wu.weatherapp.storage.StorageProvider;
+import com.brook.wu.weatherapp.storage.WeatherDatabase;
 
 //only called when app is created
 public class MyApplication extends Application {
 
     private static MyApplication instance;
+    public WeatherDatabase database;
+
     @Override
     public void onCreate() {
         super.onCreate();
         instance = this;
         AndroidNetworking.initialize(this);
-        StorageProvider.getStorageProvider().init();
+        database = WeatherDatabase.getInstance(this);
     }
 
     public static MyApplication getInstance() {

@@ -1,4 +1,6 @@
-package com.brook.wu.weatherapp.model;
+package com.brook.wu.weatherapp.utils;
+
+import com.brook.wu.weatherapp.model.City;
 
 import org.json.JSONObject;
 
@@ -6,7 +8,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 public class WeatherItem {
-
 
     private City city;
     private double temp;

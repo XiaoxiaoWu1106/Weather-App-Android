@@ -2,7 +2,15 @@ package com.brook.wu.weatherapp.model;
 
 import java.io.Serializable;
 
+import androidx.annotation.NonNull;
+import androidx.room.Entity;
+import androidx.room.PrimaryKey;
+
+@Entity
 public class City implements Serializable {
+
+    @NonNull
+    @PrimaryKey
     private int id;
     private String name;
     private String country;
