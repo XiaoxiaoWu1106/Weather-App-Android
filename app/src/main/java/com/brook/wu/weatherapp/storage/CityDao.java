@@ -13,15 +13,14 @@ import androidx.room.Query;
 public interface CityDao {
 
     @Query("SELECT * FROM City WHERE name LIKE  '%' || :filter || '%'")
-    List<City> getWorldCities(String filter);
-
-    @Query("SELECT * FROM City")
-
-    List<City> getStoredCities();
+    List<City> getCitiesFilteredByName(String filter);
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void saveCity(City city);
 
     @Query("DELETE FROM City WHERE id = :cityId")
     void deleteCity(int cityId);
+
+    @Query("SELECT * FROM City WHERE id = :cityId")
+    City getCityById(int cityId);
 }

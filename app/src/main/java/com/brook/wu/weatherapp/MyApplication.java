@@ -17,7 +17,7 @@ public class MyApplication extends Application {
         super.onCreate();
         instance = this;
         AndroidNetworking.initialize(this);
-        database = WeatherDatabase.getInstance(this);
+        database = WeatherDatabase.getInstance();
     }
 
     public static MyApplication getInstance() {

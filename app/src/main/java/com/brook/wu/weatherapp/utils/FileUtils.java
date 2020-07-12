@@ -1,5 +1,7 @@
 package com.brook.wu.weatherapp.utils;
 
+import android.content.SharedPreferences;
+
 import com.brook.wu.weatherapp.MyApplication;
 
 import java.io.BufferedReader;
@@ -35,5 +37,17 @@ public class FileUtils {
         }
 
        return writer.toString();
+    }
+
+    public static void markAppFirstTimeInit() {
+        SharedPreferences sharedPref = MyApplication.getInstance().getSharedPreferences();
+        SharedPreferences.Editor editor = sharedPref.edit();
+        editor.putBoolean("weather_app_first_time_init", true);
+        editor.apply();
+    }
+
+    public static boolean isAppInit() {
+        SharedPreferences sharedPref = MyApplication.getInstance().getSharedPreferences();
+        return sharedPref.getBoolean("weather_app_first_time_init", false);
     }
 }

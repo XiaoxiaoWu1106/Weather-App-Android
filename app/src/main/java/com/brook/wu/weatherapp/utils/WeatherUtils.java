@@ -4,6 +4,7 @@ import android.database.Cursor;
 import android.database.MatrixCursor;
 
 import com.brook.wu.weatherapp.model.City;
+import com.brook.wu.weatherapp.model.WeatherItem;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -15,14 +16,13 @@ public class WeatherUtils {
     /**
      * this method is for checking if the given city name is in the weather list already
      * @param weatherList
-     * @param cityName
+     * @param cityId
      * @return
      */
-    public static boolean containsCity(List<WeatherItem> weatherList, String cityName) {
-        if (cityName == null || cityName.isEmpty()) return false;
+    public static boolean containsCity(List<WeatherItem> weatherList, int cityId) {
         for (WeatherItem weatherItem : weatherList) {
-            City city = weatherItem.getCity();
-            if (city != null && city.getName().equalsIgnoreCase(cityName)) return true;
+            int weatherItemCityId = weatherItem.getCityId();
+            if (weatherItemCityId == cityId) return true;
         }
         return false;
     }
@@ -50,7 +50,8 @@ public class WeatherUtils {
     }
 
     public static void removeDuplicates(List<WeatherItem> weatherItems, List<String> suggested) {
-        List<String> userList = new ArrayList<>();
+        //TODO : THis might need to be fixed...
+        /*List<String> userList = new ArrayList<>();
         for(WeatherItem item : weatherItems) {
             userList.add(item.getCity().getName().toLowerCase());
         }
@@ -59,6 +60,6 @@ public class WeatherUtils {
             if(userList.contains(iter.next().toLowerCase())){
                 iter.remove();
             }
-        }
+        }*/
     }
 }

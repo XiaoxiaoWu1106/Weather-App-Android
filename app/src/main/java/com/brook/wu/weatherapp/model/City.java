@@ -9,7 +9,6 @@ import androidx.room.PrimaryKey;
 @Entity
 public class City implements Serializable {
 
-    @NonNull
     @PrimaryKey
     private int id;
     private String name;
@@ -17,7 +16,7 @@ public class City implements Serializable {
     private double lat;
     private double lon;
 
-    public City(int id, String name, String country, double lat, double lon) {
+    public City(int id, @NonNull String name,@NonNull String country, double lat, double lon) {
         this.id = id;
         this.name = name;
         this.country = country;

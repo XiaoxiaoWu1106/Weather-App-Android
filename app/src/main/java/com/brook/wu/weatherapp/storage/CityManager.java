@@ -1,28 +1,22 @@
 package com.brook.wu.weatherapp.storage;
 
-import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
-import android.util.Log;
 
 import com.brook.wu.weatherapp.MyApplication;
 import com.brook.wu.weatherapp.model.City;
+import com.brook.wu.weatherapp.model.WeatherItem;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.function.Function;
-
-import androidx.room.Room;
 
 public class CityManager {
 
     private final CityDao mCityDao = MyApplication.getInstance().database.cityDao();
-
+    private final WeatherItemDao mItemDao = MyApplication.getInstance().database.weatherItemDao();
     private static CityManager mInstance;
 
     private Handler mainHandler = new Handler(Looper.getMainLooper());
-
+    private List<City> mCachedCities;
 
     public static CityManager getInstance() {
         if (mInstance == null) {
@@ -35,36 +29,54 @@ public class CityManager {
         return mInstance;
     }
 
-    public void getUserSavedCities(DataCallback<List<City>> data) {
+    public void getUserSavedItems(DataCallback<List<WeatherItem>> data) {
         new Thread(() -> {
-            List<City> fullData = mCityDao.getStoredCities();
+            List<WeatherItem> fullData = mItemDao.getAllWeatherItems();
             mainHandler.post(() -> data.completed(fullData));
         }).start();
 
     }
 
-    public void getWorldCities(String newText, DataCallback<List<City>> data) {
+    public void saveWeatherItem(WeatherItem item, DataCallback<Void> data) {
         new Thread(() -> {
-            List<City> fullData = mCityDao.getWorldCities(newText);
-            mainHandler.post(() -> data.completed(fullData));
+            mItemDao.saveWeatherItem(item);
+            mainHandler.post(() -> data.completed(null));
+        }).start();
+
+    }
+
+    public void getCityById(int cityId, DataCallback<City> data) {
+        new Thread(() -> {
+            City city = mCityDao.getCityById(cityId);
+            mainHandler.post(() -> data.completed(city));
         }).start();
     }
 
-    public void deleteCity(int id, DataCallback<Void> data) {
-        new Thread(() -> {
-            mCityDao.deleteCity(id);
-            mainHandler.post(() -> data.completed(null));
-        }).start();
+
+    public void getCityByName(String cityName, DataCallback<City> data) {
+        getCitiesByNameFilter(cityName,(cities) ->
+                data.completed(cities.size() > 0 ? cities.get(0) : null)
+        );
     }
 
-    public void saveCity(City city, DataCallback<Void> data) {
-        Log.d("TESTINGTAG","Saving a cityThreadStart!");
+
+    public void deleteWeatherItem(WeatherItem item,DataCallback<Void> data) {
         new Thread(() -> {
-            Log.d("TESTINGTAG","Saving a city!");
-            mCityDao.saveCity(city);
-            Log.d("TESTINGTAG","Save ready, calling callback....!");
+            mItemDao.deleteWeatherItem(item.getCityId());
             mainHandler.post(() -> data.completed(null));
         }).start();
+
+    }
+
+    public void getCitiesByNameFilter(String newText, DataCallback<List<City>> data) {
+        if (mCachedCities == null) {
+            new Thread(() -> {
+                mCachedCities = mCityDao.getCitiesFilteredByName(newText);
+                mainHandler.post(() -> data.completed(mCachedCities));
+            }).start();
+        } else {
+            data.completed(mCachedCities);
+        }
     }
 }
 

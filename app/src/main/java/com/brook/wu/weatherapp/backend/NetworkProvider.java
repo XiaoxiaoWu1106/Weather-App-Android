@@ -5,7 +5,7 @@ import android.util.Log;
 import com.androidnetworking.AndroidNetworking;
 import com.androidnetworking.error.ANError;
 import com.androidnetworking.interfaces.JSONObjectRequestListener;
-import com.brook.wu.weatherapp.utils.WeatherItem;
+import com.brook.wu.weatherapp.model.WeatherItem;
 
 import org.json.JSONObject;
 
