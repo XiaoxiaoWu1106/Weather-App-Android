@@ -1,6 +1,7 @@
 package com.brook.wu.weatherapp.utils;
 
 import android.content.SharedPreferences;
+import android.util.Log;
 
 import com.brook.wu.weatherapp.MyApplication;
 
@@ -16,6 +17,7 @@ import java.nio.charset.StandardCharsets;
 import androidx.annotation.RawRes;
 
 public class FileUtils {
+    private static String TAG = FileUtils.class.getSimpleName();
     public static String readRawFileAsString(@RawRes int rawId) {
         InputStream is = MyApplication.getInstance().getResources().openRawResource(rawId);
         Writer writer = new StringWriter();
@@ -48,6 +50,7 @@ public class FileUtils {
 
     public static boolean isAppInit() {
         SharedPreferences sharedPref = MyApplication.getInstance().getSharedPreferences();
+        Log.d(TAG,"isAppInit" + sharedPref.getBoolean("weather_app_first_time_init", false));
         return sharedPref.getBoolean("weather_app_first_time_init", false);
     }
 }

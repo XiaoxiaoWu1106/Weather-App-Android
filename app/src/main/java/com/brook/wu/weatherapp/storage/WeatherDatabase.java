@@ -1,5 +1,7 @@
 package com.brook.wu.weatherapp.storage;
 
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 
 import com.brook.wu.weatherapp.MyApplication;
@@ -24,6 +26,7 @@ public abstract class WeatherDatabase extends RoomDatabase {
     private static final String COLUMN_COUNTRY = "country";
     private static final String COLUMN_LAT = "lat";
     private static final String COLUMN_LON = "lon";
+    private Handler mainHandler = new Handler(Looper.getMainLooper());
 
     private static volatile WeatherDatabase INSTANCE;
 
@@ -45,23 +48,27 @@ public abstract class WeatherDatabase extends RoomDatabase {
     }
 
     public void initWithCityData(DataCallback<Boolean> completion) {
-        try {
-            String jsonString = FileUtils.readRawFileAsString(R.raw.city_list);
-            JSONArray jsonArray = new JSONArray(jsonString);
-            for (int i = 0; i < jsonArray.length(); i++) {
-                JSONObject jsonObject = jsonArray.getJSONObject(i);
-                int cityId = jsonObject.getInt(COLUMN_ID);
-                String cityName = jsonObject.getString(COLUMN_NAME);
-                String cityCountry = jsonObject.getString(COLUMN_COUNTRY);
-                JSONObject coord = jsonObject.getJSONObject("coord");
-                double cityLat = coord.getDouble(COLUMN_LAT);
-                double cityLon = coord.getDouble(COLUMN_LON);
-                Log.v("DBLoading", "inserting city " + cityName);
-                cityDao().saveCity(new City(cityId, cityName, cityCountry, cityLat, cityLon));
+        new Thread(()-> {
+            try {
+                String jsonString = FileUtils.readRawFileAsString(R.raw.city_list);
+                JSONArray jsonArray = new JSONArray(jsonString);
+                for (int i = 0; i < jsonArray.length(); i++) {
+                    JSONObject jsonObject = jsonArray.getJSONObject(i);
+                    int cityId = jsonObject.getInt(COLUMN_ID);
+                    String cityName = jsonObject.getString(COLUMN_NAME);
+                    String cityCountry = jsonObject.getString(COLUMN_COUNTRY);
+                    JSONObject coord = jsonObject.getJSONObject("coord");
+                    double cityLat = coord.getDouble(COLUMN_LAT);
+                    double cityLon = coord.getDouble(COLUMN_LON);
+                    Log.v("DBLoading", "inserting city " + cityName);
+                    cityDao().saveCity(new City(cityId, cityName, cityCountry, cityLat, cityLon));
+                }
+                mainHandler.post(()->completion.completed(true));
+            } catch (Exception e) {
+                e.printStackTrace();
+                mainHandler.post(() ->completion.completed(false));
             }
-            completion.completed(true);
-        } catch (Exception ignore) {
-            completion.completed(false);
-        }
+        }).start();
+
     }
 }

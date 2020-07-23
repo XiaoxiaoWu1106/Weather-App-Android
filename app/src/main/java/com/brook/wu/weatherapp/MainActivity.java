@@ -23,6 +23,7 @@ import com.brook.wu.weatherapp.utils.WeatherUtils;
 import com.google.android.material.snackbar.Snackbar;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import androidx.appcompat.app.AlertDialog;
@@ -40,6 +41,7 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
     private WeatherListAdapter mAdapter;
     private TextView mPlaceholder;
     private SwipeRefreshLayout mSwipeRefreshLayout;
+    private String TAG = MainActivity.class.getSimpleName();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -72,9 +74,10 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
     }
 
     private void initAppForFirstTime(DataCallback<Void> completion) {
-        if (FileUtils.isAppInit()) {
+        if (!FileUtils.isAppInit()) {
             MyApplication.getInstance().database.initWithCityData((success) -> {
                 FileUtils.markAppFirstTimeInit();
+                Log.d(TAG,"first init " +success);
                 completion.completed(null);
             });
         } else {
@@ -128,6 +131,7 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
 
             @Override
             public boolean onQueryTextSubmit(String query) {
+                Log.d(TAG,"Submiting query " + query);
                 handleAddCity(query);
                 return true;
             }
@@ -135,6 +139,11 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
             @Override
             public boolean onQueryTextChange(String newText) {
                 //query the cities matching user's input
+                if (newText.length() < 2 ) {
+                    Cursor cursor = WeatherUtils.getCursor(new ArrayList<>());
+                    search.setSuggestionsAdapter(new SearchAdapter(MainActivity.this, cursor, new ArrayList<>()));
+                    return true;
+                }
                 CityManager.getInstance().getCitiesByNameFilter(newText, (cities) -> {
                     cityQueries.clear();
                     List<String> worldCitiesFiltered = WeatherUtils.mapCitiesToCityNames(cities);
@@ -143,7 +152,7 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
                     Cursor cursor = WeatherUtils.getCursor(cityQueries);
                     search.setSuggestionsAdapter(new SearchAdapter(MainActivity.this, cursor, cityQueries));
                 });
-                return false;
+                return true;
             }
 
         });
@@ -155,10 +164,10 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
             Snackbar.make(mSwipeRefreshLayout, R.string.error_city_does_not_exist, Snackbar.LENGTH_LONG).show();
             return;
         }
-        //TODO : Show some loading progress if needed.
+        //TODO : Show some loading progress if needed
         CityManager.getInstance().getCityByName(query, (city) -> {
             if (!WeatherUtils.containsCity(mDataSet, city.getId())) {
-                loadCity(query);
+                loadCity(city.getId());
             } else {
                 Snackbar.make(mSwipeRefreshLayout, R.string.error_city_exist, Snackbar.LENGTH_LONG).show();
             }
@@ -228,8 +237,8 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
 //TODO:refactor the following functions to own class
 
 
-    private void loadCity(String cityName) {
-        NetworkProvider.getWeather(cityName, new NetworkProvider.Callback() {
+    private void loadCity(int cityId) {
+        NetworkProvider.getWeather(cityId, new NetworkProvider.Callback() {
             private void adapterSync(WeatherItem item) {
                 addData(item);
             }
@@ -237,7 +246,6 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
             @Override
             public void onComplete(WeatherItem item) {
                 CityManager.getInstance().saveWeatherItem(item, (complted) -> adapterSync(item));
-                adapterSync(item);
             }
 
             @Override

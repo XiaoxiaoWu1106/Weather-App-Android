@@ -30,8 +30,9 @@ public class WeatherUtils {
     public static List<String> mapCitiesToCityNames(@NonNull List<City> cities) {
         List<String> cityNames = new ArrayList<>();
         for (City city:cities) {
-            if (!cityNames.contains(city.getName().toLowerCase())) {
-                cityNames.add(city.getName().toLowerCase());
+            String cityNameWithCountry = city.getName().toLowerCase() + " " + city.getCountry().toLowerCase();
+            if (!cityNames.contains(cityNameWithCountry)) {
+                cityNames.add(cityNameWithCountry);
             }
         }
         return cityNames;

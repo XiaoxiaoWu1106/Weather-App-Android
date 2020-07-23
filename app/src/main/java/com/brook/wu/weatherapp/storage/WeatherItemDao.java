@@ -13,7 +13,7 @@ import java.util.List;
 @Dao
 public interface WeatherItemDao {
 
-    @Query("SELECT * FROM WeatherItem")
+    @Query("SELECT * FROM WeatherItem ORDER BY cityId desc")
     List<WeatherItem> getAllWeatherItems();
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)

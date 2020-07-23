@@ -13,6 +13,10 @@ public class WeatherItem {
 
     @PrimaryKey
     private int cityId;
+
+
+
+    private String cityName;
     private double temp;
     private double minTemp;
     private double maxTemp;
@@ -36,6 +40,7 @@ public class WeatherItem {
             JSONObject jsonObject = json.getJSONObject("main");
             WeatherItem item = new WeatherItem();
             item.cityId = json.getInt("id");
+            item.cityName = json.getString("name");
             item.temp = jsonObject.getDouble("temp");
             item.minTemp = jsonObject.getDouble("temp_min");
             item.maxTemp = jsonObject.getDouble("temp_max");
@@ -69,6 +74,9 @@ public class WeatherItem {
         return iconCode;
     }
 
+    public String getCityName() {
+        return cityName;
+    }
     @NonNull
     @Override
     public String toString() {
@@ -97,5 +105,9 @@ public class WeatherItem {
 
     public void setIconCode(String iconCode) {
         this.iconCode = iconCode;
+    }
+
+    public void setCityName(String cityName) {
+        this.cityName = cityName;
     }
 }

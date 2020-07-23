@@ -69,14 +69,11 @@ public class CityManager {
     }
 
     public void getCitiesByNameFilter(String newText, DataCallback<List<City>> data) {
-        if (mCachedCities == null) {
+
             new Thread(() -> {
                 mCachedCities = mCityDao.getCitiesFilteredByName(newText);
                 mainHandler.post(() -> data.completed(mCachedCities));
             }).start();
-        } else {
-            data.completed(mCachedCities);
-        }
     }
 }
 

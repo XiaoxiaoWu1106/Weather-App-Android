@@ -12,7 +12,7 @@ import androidx.room.Query;
 @Dao
 public interface CityDao {
 
-    @Query("SELECT * FROM City WHERE name LIKE  '%' || :filter || '%'")
+    @Query("SELECT * FROM City WHERE name LIKE :filter || '%' ORDER BY name, id")
     List<City> getCitiesFilteredByName(String filter);
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
