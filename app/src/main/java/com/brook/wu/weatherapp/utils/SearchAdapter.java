@@ -5,7 +5,6 @@ import android.database.Cursor;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-
 import android.widget.TextView;
 
 import com.brook.wu.weatherapp.R;
@@ -28,7 +27,7 @@ public class SearchAdapter extends CursorAdapter {
     public void bindView(View view, Context context, Cursor cursor) {
         int position = cursor.getPosition();
         String text = items.get(position);
-        this.text.setText(text);
+        this.text.setText(capitalizeWord(text));
     }
 
     @Override
@@ -39,4 +38,17 @@ public class SearchAdapter extends CursorAdapter {
         return view;
 
     }
+
+
+    private String capitalizeWord(String str) {
+        String words[] = str.split("\\s");
+        String capitalizeWord = "";
+        for (String w : words) {
+            String first = w.substring(0, 1);
+            String afterfirst = w.substring(1);
+            capitalizeWord += first.toUpperCase() + afterfirst + " ";
+        }
+        return capitalizeWord.trim();
+    }
+
 }

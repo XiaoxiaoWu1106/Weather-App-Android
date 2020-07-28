@@ -18,6 +18,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
+
 @Database(entities = {City.class, WeatherItem.class}, version = 2)
 public abstract class WeatherDatabase extends RoomDatabase {
 
@@ -50,6 +52,7 @@ public abstract class WeatherDatabase extends RoomDatabase {
     public void initWithCityData(DataCallback<Boolean> completion) {
         new Thread(()-> {
             try {
+                ArrayList<String> duplicationIdentifier = new ArrayList<>();
                 String jsonString = FileUtils.readRawFileAsString(R.raw.city_list);
                 JSONArray jsonArray = new JSONArray(jsonString);
                 for (int i = 0; i < jsonArray.length(); i++) {
@@ -57,6 +60,11 @@ public abstract class WeatherDatabase extends RoomDatabase {
                     int cityId = jsonObject.getInt(COLUMN_ID);
                     String cityName = jsonObject.getString(COLUMN_NAME);
                     String cityCountry = jsonObject.getString(COLUMN_COUNTRY);
+
+                    String idForDuplication = cityCountry + cityName;
+                    //Filter out duplication.
+                    if(duplicationIdentifier.contains(idForDuplication)) continue;
+                    duplicationIdentifier.add(idForDuplication);
                     JSONObject coord = jsonObject.getJSONObject("coord");
                     double cityLat = coord.getDouble(COLUMN_LAT);
                     double cityLon = coord.getDouble(COLUMN_LON);

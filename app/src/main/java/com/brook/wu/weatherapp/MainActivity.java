@@ -147,7 +147,6 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
                 CityManager.getInstance().getCitiesByNameFilter(newText, (cities) -> {
                     cityQueries.clear();
                     List<String> worldCitiesFiltered = WeatherUtils.mapCitiesToCityNames(cities);
-                    WeatherUtils.removeDuplicates(mDataSet, worldCitiesFiltered);
                     cityQueries.addAll(worldCitiesFiltered);
                     Cursor cursor = WeatherUtils.getCursor(cityQueries);
                     search.setSuggestionsAdapter(new SearchAdapter(MainActivity.this, cursor, cityQueries));
@@ -169,7 +168,8 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
             if (!WeatherUtils.containsCity(mDataSet, city.getId())) {
                 loadCity(city.getId());
             } else {
-                Snackbar.make(mSwipeRefreshLayout, R.string.error_city_exist, Snackbar.LENGTH_LONG).show();
+                Snackbar.make(mSwipeRefreshLayout, getString(R.string.error_city_exist), Snackbar.LENGTH_LONG).show();
+
             }
             cityQueries.clear();
             invalidateOptionsMenu();
