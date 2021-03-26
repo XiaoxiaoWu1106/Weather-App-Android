@@ -2,6 +2,8 @@ package com.brook.wu.weatherapp.model;
 
 import org.json.JSONObject;
 
+import java.util.Objects;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.room.Embedded;
@@ -109,5 +111,18 @@ public class WeatherItem {
 
     public void setCityName(String cityName) {
         this.cityName = cityName;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        WeatherItem that = (WeatherItem) o;
+        return cityId == that.cityId;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(cityId);
     }
 }

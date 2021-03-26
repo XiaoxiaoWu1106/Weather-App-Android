@@ -24,6 +24,7 @@ import com.google.android.material.snackbar.Snackbar;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 
 import androidx.appcompat.app.AlertDialog;
@@ -91,13 +92,24 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
 
     private void loadData() {
         mPlaceholder.setText(R.string.loading);
+        //
+
+        //when network is down
         CityManager.getInstance().getUserSavedItems((items) -> {
             setData(items);
             if (items.size() == 0) {
                 mPlaceholder.setText(R.string.no_cities_placeholder_text);
                 mSwipeRefreshLayout.setRefreshing(false);
+            } else {
+                fetchDataOnline(items);
             }
         });
+    }
+
+    private void fetchDataOnline(List<WeatherItem> items) {
+        for(WeatherItem item : items) {
+            loadCity(item.getCityId());
+        }
     }
 
     final List<String> cityQueries = new ArrayList<>();
@@ -240,6 +252,7 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
     private void loadCity(int cityId) {
         NetworkProvider.getWeather(cityId, new NetworkProvider.Callback() {
             private void adapterSync(WeatherItem item) {
+                Log.d("weather refreshed for: ", item.getCityName());
                 addData(item);
             }
 
@@ -269,6 +282,7 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
 
     private void addData(WeatherItem item) {
         mSwipeRefreshLayout.setRefreshing(false);
+        if(mDataSet.contains(item)) mDataSet.remove(item);
         mDataSet.add(item);
         mAdapter.notifyDataSetChanged();
     }

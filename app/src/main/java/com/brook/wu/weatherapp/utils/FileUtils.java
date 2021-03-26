@@ -4,6 +4,8 @@ import android.content.SharedPreferences;
 import android.util.Log;
 
 import com.brook.wu.weatherapp.MyApplication;
+import com.brook.wu.weatherapp.backend.RawDataPartA;
+import com.brook.wu.weatherapp.backend.RawDataPartB;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -52,5 +54,12 @@ public class FileUtils {
         SharedPreferences sharedPref = MyApplication.getInstance().getSharedPreferences();
         Log.d(TAG,"isAppInit" + sharedPref.getBoolean("weather_app_first_time_init", false));
         return sharedPref.getBoolean("weather_app_first_time_init", false);
+    }
+
+    public String getDataAsString() {
+        StringBuffer sb = new StringBuffer();
+        sb.append(RawDataPartA.getDataAsString());
+        sb.append(RawDataPartB.getDataAsString());
+        return sb.toString();
     }
 }
